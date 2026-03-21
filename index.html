@@ -724,7 +724,12 @@ async function api(action, params = {}) {
   url.searchParams.set('action', action);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
 
-  const res = await fetch(url.toString(), { method: 'GET', mode: 'cors' });
+  // Apps Script redirects to googleusercontent.com — must follow redirects.
+  // mode: 'cors' + redirect: 'follow' handles the 302 correctly.
+  const res = await fetch(url.toString(), {
+    method: 'GET',
+    redirect: 'follow',
+  });
   if (!res.ok) throw new Error('HTTP ' + res.status);
   return res.json();
 }
