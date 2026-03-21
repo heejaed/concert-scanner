@@ -98,15 +98,14 @@ nav {
 /* ── PANELS ── */
 .panel { display: none; flex: 1; flex-direction: column; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .panel.on { display: flex; }
+#panel-scan   { align-items: center; gap: 18px; padding: 20px 18px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); }
+#panel-search { gap: 14px; padding: 18px; padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px)); }
+#panel-stats  { gap: 14px; padding: 18px; padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px)); }
 
 /* ══════════════════════════
    SCAN PANEL
 ══════════════════════════ */
-.scan-body {
-  padding: 20px 18px;
-  display: flex; flex-direction: column; align-items: center; gap: 18px;
-  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-}
+/* scan-body layout handled by #panel-scan */
 
 .viewfinder-wrap {
   position: relative; width: 100%; max-width: 300px;
@@ -214,10 +213,7 @@ nav {
 /* ══════════════════════════
    SEARCH PANEL
 ══════════════════════════ */
-.search-body {
-  padding: 18px; display: flex; flex-direction: column; gap: 14px;
-  padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
-}
+/* search-body layout handled by #panel-search */
 .search-row { display: flex; gap: 10px; flex-shrink: 0; }
 .search-input {
   flex: 1; min-height: var(--tap);
@@ -268,10 +264,7 @@ nav {
 /* ══════════════════════════
    STATS PANEL
 ══════════════════════════ */
-.stats-body {
-  padding: 18px; display: flex; flex-direction: column; gap: 14px;
-  padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
-}
+/* stats-body layout handled by #panel-stats */
 .event-card {
   background: var(--surface); border: 1.5px solid var(--border);
   border-radius: 16px; padding: 20px;
@@ -374,7 +367,7 @@ nav {
   </nav>
 
   <!-- SCAN -->
-  <div class="panel on scan-body" id="panel-scan">
+  <div class="panel on" id="panel-scan">
     <div class="viewfinder-wrap">
       <div id="reader"></div>
       <svg class="corners-svg" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
@@ -408,7 +401,7 @@ nav {
   </div>
 
   <!-- SEARCH -->
-  <div class="panel search-body" id="panel-search">
+  <div class="panel" id="panel-search">
     <div class="search-row">
       <input type="search" class="search-input" id="searchInput"
              placeholder="Search by name…" autocomplete="off"
@@ -421,7 +414,7 @@ nav {
   </div>
 
   <!-- STATS -->
-  <div class="panel stats-body" id="panel-stats">
+  <div class="panel" id="panel-stats">
     <div id="statsInner"><div class="spin-wrap"><div class="spinner"></div> Loading…</div></div>
     <button class="refresh-btn" onclick="loadStats()">↺ Refresh Stats</button>
   </div>
