@@ -35,17 +35,35 @@
 body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;}
 
 /* ── TOP BAR ── */
-.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-.topbar-left{display:flex;align-items:center;gap:14px;}
-.logo{width:36px;height:36px;background:var(--red);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
-.site-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--red);}
-.season-tag{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text4);background:var(--surface2);border:1px solid var(--border2);border-radius:99px;padding:3px 11px;}
-.topbar-right{display:flex;align-items:center;gap:12px;}
-.last-update{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);}
-.refresh-btn{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:7px 15px;color:var(--text2);font-size:13px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:background .2s;}
-.refresh-btn:hover{background:var(--border2);}
-.scanner-link{background:var(--red);color:#fff;border:none;border-radius:8px;padding:7px 15px;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;text-decoration:none;transition:opacity .15s;}
-.scanner-link:hover{opacity:.85;}
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;           /* 좁은 화면에서 두 줄로 */
+  gap: 8px;
+  position: sticky; top: 0; z-index: 100;
+}
+.topbar-left { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.logo { width: 34px; height: 34px; background: var(--red); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+.site-title { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; color: var(--red); white-space: nowrap; }
+.season-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text4); background: var(--surface2); border: 1px solid var(--border2); border-radius: 99px; padding: 3px 10px; white-space: nowrap; }
+.topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.last-update { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); white-space: nowrap; }
+.refresh-btn { background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; padding: 7px 13px; color: var(--text2); font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; cursor: pointer; transition: background .2s; white-space: nowrap; }
+.refresh-btn:hover { background: var(--border2); }
+.scanner-link { background: var(--red); color: #fff; border: none; border-radius: 8px; padding: 7px 13px; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; text-decoration: none; transition: opacity .15s; white-space: nowrap; }
+.scanner-link:hover { opacity: .85; }
+
+/* 좁은 화면: topbar-right가 두 번째 줄 전체를 차지 */
+@media (max-width: 600px) {
+  .topbar { padding: 10px 16px; }
+  .topbar-right { width: 100%; justify-content: flex-end; }
+  .season-tag  { display: none; }   /* 시즌 태그 숨김 */
+  .last-update { font-size: 10px; } /* 타임스탬프는 작게 유지 */
+}
 
 /* ── SETUP ── */
 .setup-overlay{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px;}
