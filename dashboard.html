@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎵 Staff Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg:        #07080d;
+  --surface:   #0e0f18;
+  --surface2:  #161824;
+  --border:    #1e2030;
+  --border2:   #2a2d44;
+  --gold:      #e2b44a;
+  --gold-s:    rgba(226,180,74,0.12);
+  --gold-dim:  #8a6d2a;
+  --green:     #22d97a;
+  --green-s:   rgba(34,217,122,0.10);
+  --red:       #f04060;
+  --red-s:     rgba(240,64,96,0.10);
+  --blue:      #5b8dee;
+  --blue-s:    rgba(91,141,238,0.10);
+  --amber:     #f5a020;
+  --text:      #e4e0f5;
+  --text2:     #7e7a9c;
+  --text3:     #3e3c58;
+  --r:         14px;
+  --gap:       16px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* ─── TOP BAR ─── */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.topbar-left { display: flex; align-items: center; gap: 14px; }
+.logo {
+  width: 36px; height: 36px;
+  background: var(--gold);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.site-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px; font-weight: 800;
+  color: var(--gold); letter-spacing: -0.01em;
+}
+.season-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--text3);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 99px; padding: 3px 10px;
+}
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.refresh-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 7px 14px;
+  color: var(--gold);
+  font-size: 13px;
+  font-family: 'Instrument Sans', sans-serif;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.refresh-btn:hover { background: var(--border2); }
+.last-update {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--text3);
+}
+.scanner-link {
+  background: var(--gold);
+  color: #07080d;
+  border: none; border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 13px; font-weight: 600;
+  font-family: 'Instrument Sans', sans-serif;
+  cursor: pointer; text-decoration: none;
+  transition: opacity 0.15s;
+}
+.scanner-link:hover { opacity: 0.85; }
+
+/* ─── LAYOUT ─── */
+.page { max-width: 1280px; margin: 0 auto; padding: 28px 24px 48px; }
+
+/* ─── CONFIG SETUP ─── */
+.setup-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.setup-box {
+  background: var(--surface);
+  border: 1.5px solid var(--border2);
+  border-radius: 20px; padding: 32px 28px;
+  max-width: 420px; width: 100%; text-align: center;
+}
+.setup-box h2 { font-family:'Syne',sans-serif; font-size:22px; color:var(--gold); margin-bottom:10px; }
+.setup-box p  { font-size:14px; color:var(--text2); line-height:1.6; margin-bottom:20px; }
+.setup-input {
+  width:100%; padding:12px 16px;
+  background:var(--surface2); border:1.5px solid var(--border2);
+  border-radius:10px; color:var(--text); font-size:14px;
+  font-family:'DM Mono',monospace; outline:none; margin-bottom:12px;
+}
+.setup-btn {
+  width:100%; padding:13px;
+  background:var(--gold); color:#07080d;
+  border:none; border-radius:10px;
+  font-size:15px; font-weight:600;
+  font-family:'Instrument Sans',sans-serif; cursor:pointer;
+}
+
+/* ─── SECTION HEADING ─── */
+.section-head {
+  display: flex; align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px; font-weight: 700;
+  color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+
+/* ─── GRAND TOTALS ROW ─── */
+.grand-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--gap);
+  margin-bottom: 28px;
+}
+@media (max-width: 900px) { .grand-grid { grid-template-columns: repeat(3,1fr); } }
+@media (max-width: 560px) { .grand-grid { grid-template-columns: repeat(2,1fr); } }
+
+.kpi {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  border-radius: 99px 99px 0 0;
+}
+.kpi.gold::before  { background: var(--gold); }
+.kpi.green::before { background: var(--green); }
+.kpi.blue::before  { background: var(--blue); }
+.kpi.red::before   { background: var(--red); }
+.kpi.amber::before { background: var(--amber); }
+
+.kpi-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+.kpi-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 36px; font-weight: 800;
+  line-height: 1; margin-bottom: 2px;
+}
+.kpi.gold  .kpi-value { color: var(--gold); }
+.kpi.green .kpi-value { color: var(--green); }
+.kpi.blue  .kpi-value { color: var(--blue); }
+.kpi.red   .kpi-value { color: var(--red); }
+.kpi.amber .kpi-value { color: var(--amber); }
+.kpi-sub { font-size: 12px; color: var(--text3); }
+
+/* ─── TWO-COL LAYOUT ─── */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap);
+  margin-bottom: 28px;
+}
+@media (max-width: 760px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ─── CONCERT CARDS ─── */
+.concert-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--gap);
+  margin-bottom: 28px;
+}
+@media (max-width: 760px) { .concert-grid { grid-template-columns: 1fr; } }
+
+.concert-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  padding: 20px;
+  position: relative;
+}
+.concert-card.active-night {
+  border-color: var(--gold-dim);
+  background: linear-gradient(135deg, var(--surface) 80%, rgba(226,180,74,0.04));
+}
+.active-pill {
+  position: absolute; top: 14px; right: 14px;
+  background: var(--gold-s);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; padding: 3px 8px;
+  border-radius: 99px; letter-spacing: 0.06em;
+}
+.concert-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px; font-weight: 700;
+  margin-bottom: 4px; padding-right: 60px;
+}
+.concert-meta {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--text2);
+  margin-bottom: 16px;
+}
+
+/* Progress bar */
+.prog-wrap { margin-bottom: 14px; }
+.prog-header {
+  display: flex; justify-content: space-between;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--text2);
+  margin-bottom: 6px;
+}
+.prog-track {
+  height: 7px; background: var(--border2);
+  border-radius: 99px; overflow: hidden;
+}
+.prog-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+  border-radius: 99px;
+  transition: width 0.6s ease;
+  min-width: 3px;
+}
+
+/* Mini stats row */
+.mini-stats {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 8px; margin-bottom: 14px;
+}
+.mini-stat {
+  background: var(--surface2);
+  border-radius: 9px; padding: 10px;
+  text-align: center;
+}
+.mini-stat-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px; font-weight: 800; line-height: 1;
+  margin-bottom: 3px;
+}
+.mini-stat-num.g { color: var(--green); }
+.mini-stat-num.o { color: var(--gold); }
+.mini-stat-num.m { color: var(--text3); }
+.mini-stat-lbl {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+
+/* Ticket type breakdown */
+.type-rows { display: flex; flex-direction: column; gap: 6px; }
+.type-row {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px;
+}
+.type-name { width: 90px; color: var(--text2); flex-shrink: 0; }
+.type-bar-bg {
+  flex: 1; height: 5px; background: var(--border2);
+  border-radius: 99px; overflow: hidden;
+}
+.type-bar-fill {
+  height: 100%; border-radius: 99px;
+  background: var(--blue);
+  transition: width 0.5s ease;
+}
+.type-count {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px; color: var(--text2);
+  width: 28px; text-align: right; flex-shrink: 0;
+}
+.type-rev {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--text3);
+  width: 52px; text-align: right; flex-shrink: 0;
+}
+
+/* ─── CARD WRAPPER ─── */
+.card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.card-head {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+.card-body { padding: 0; }
+
+/* ─── RECENT CHECKINS TABLE ─── */
+.checkin-list { display: flex; flex-direction: column; }
+.checkin-row {
+  display: grid;
+  grid-template-columns: 1fr 110px 90px 80px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  transition: background 0.15s;
+}
+.checkin-row:last-child { border-bottom: none; }
+.checkin-row:hover { background: var(--surface2); }
+.checkin-name { font-weight: 500; }
+.checkin-type { color: var(--text2); font-size: 12px; }
+.checkin-time {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--text3);
+}
+.checkin-concert {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; color: var(--text3);
+  text-align: right;
+}
+
+/* ─── ATTENDEE TABLE ─── */
+.table-search-wrap {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.table-search {
+  width: 100%;
+  background: var(--surface2);
+  border: 1.5px solid var(--border2);
+  border-radius: 9px;
+  padding: 9px 14px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: 'Instrument Sans', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.table-search:focus { border-color: var(--gold-dim); }
+.table-search::placeholder { color: var(--text3); }
+
+.att-table { width: 100%; border-collapse: collapse; }
+.att-table th {
+  text-align: left;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+  position: sticky; top: 58px;
+}
+.att-table td {
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  vertical-align: middle;
+}
+.att-table tr:last-child td { border-bottom: none; }
+.att-table tr:hover td { background: var(--surface2); }
+
+.status-badge {
+  display: inline-block;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; padding: 3px 8px;
+  border-radius: 5px; white-space: nowrap;
+  letter-spacing: 0.04em;
+}
+.status-badge.ACTIVE     { background: var(--green-s); color: var(--green); }
+.status-badge.CHECKED_IN { background: var(--gold-s);  color: var(--gold); }
+.status-badge.CANCELLED  { background: var(--red-s);   color: var(--red); }
+
+.concert-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; color: var(--text3);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 4px; padding: 2px 6px;
+}
+
+/* ─── EMPTY / LOADING ─── */
+.loading-full {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 300px; gap: 14px;
+  color: var(--text3); font-size: 14px;
+}
+.spinner {
+  width: 28px; height: 28px;
+  border: 2.5px solid var(--border2);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty-row td {
+  text-align: center;
+  color: var(--text3); padding: 28px;
+}
+
+/* ─── SCROLLABLE TABLE WRAPPER ─── */
+.table-scroll { max-height: 440px; overflow-y: auto; }
+</style>
+</head>
+<body>
+
+<!-- Setup overlay -->
+<div class="setup-overlay" id="setupOverlay" style="display:none;">
+  <div class="setup-box">
+    <h2>⚙️ Dashboard Setup</h2>
+    <p>Paste your Apps Script Web App URL.<br>Saved locally on this device.</p>
+    <input type="url" class="setup-input" id="setupInput"
+           placeholder="https://script.google.com/macros/s/…/exec">
+    <button class="setup-btn" onclick="saveSetup()">Save & Load Dashboard</button>
+  </div>
+</div>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">🎵</div>
+    <div class="site-title" id="orgName">Staff Dashboard</div>
+    <div class="season-tag" id="seasonTag">Loading…</div>
+  </div>
+  <div class="topbar-right">
+    <span class="last-update" id="lastUpdate"></span>
+    <button class="refresh-btn" onclick="loadDashboard()">↺ Refresh</button>
+    <a class="scanner-link" id="scannerLink" href="index.html">📷 Scanner</a>
+  </div>
+</div>
+
+<!-- Main content -->
+<div class="page" id="mainPage">
+  <div class="loading-full">
+    <div class="spinner"></div>
+    Loading dashboard…
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+//  CONFIG
+// ════════════════════════════════════════════════════════
+const LS_KEY = 'choir_scanner_url';
+let API_URL  = localStorage.getItem(LS_KEY) || '';
+
+function checkSetup() {
+  if (!API_URL) document.getElementById('setupOverlay').style.display = 'flex';
+  else loadDashboard();
+}
+function saveSetup() {
+  const v = document.getElementById('setupInput').value.trim();
+  if (!v.startsWith('http')) { alert('Please enter a valid URL.'); return; }
+  API_URL = v;
+  localStorage.setItem(LS_KEY, v);
+  document.getElementById('setupOverlay').style.display = 'none';
+  loadDashboard();
+}
+
+async function apiFetch(action, params = {}) {
+  const url = new URL(API_URL);
+  url.searchParams.set('action', action);
+  for (const [k,v] of Object.entries(params)) url.searchParams.set(k,v);
+  const res = await fetch(url.toString(), { method:'GET', redirect:'follow' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+// ════════════════════════════════════════════════════════
+//  LOAD
+// ════════════════════════════════════════════════════════
+let allAttendees = [];
+
+async function loadDashboard() {
+  document.getElementById('mainPage').innerHTML =
+    '<div class="loading-full"><div class="spinner"></div>Loading dashboard…</div>';
+
+  try {
+    const data = await apiFetch('dashboard');
+    if (!data.success) throw new Error(data.error || 'API error');
+    render(data);
+  } catch(e) {
+    document.getElementById('mainPage').innerHTML =
+      `<div class="loading-full" style="color:var(--red)">
+         ⚠️ Error loading dashboard<br>
+         <small style="color:var(--text3)">${e.message}</small><br><br>
+         <button class="refresh-btn" onclick="loadDashboard()">Try again</button>
+         <button class="refresh-btn" onclick="resetSetup()">Reset URL</button>
+       </div>`;
+  }
+}
+
+function resetSetup() {
+  localStorage.removeItem(LS_KEY);
+  API_URL = '';
+  document.getElementById('setupOverlay').style.display = 'flex';
+}
+
+// ════════════════════════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════════════════════════
+function render(d) {
+  allAttendees = d.attendees || [];
+
+  // Topbar
+  document.getElementById('orgName').textContent   = d.org || 'Staff Dashboard';
+  document.getElementById('seasonTag').textContent = d.season || '';
+  document.getElementById('lastUpdate').textContent = 'Updated ' + d.generatedAt;
+
+  const g = d.grand;
+
+  document.getElementById('mainPage').innerHTML = `
+
+    <!-- ── GRAND KPIs ── -->
+    <div style="margin-bottom:10px;">
+      <div class="section-title">Season Overview</div>
+    </div>
+    <div class="grand-grid">
+      <div class="kpi green">
+        <div class="kpi-label">Checked In</div>
+        <div class="kpi-value">${g.checkedIn}</div>
+        <div class="kpi-sub">${g.percent}% admitted</div>
+      </div>
+      <div class="kpi gold">
+        <div class="kpi-label">Tickets Sold</div>
+        <div class="kpi-value">${g.total}</div>
+        <div class="kpi-sub">${g.remaining} not yet in</div>
+      </div>
+      <div class="kpi blue">
+        <div class="kpi-label">Total Revenue</div>
+        <div class="kpi-value">$${g.revenue.toLocaleString()}</div>
+        <div class="kpi-sub">all concerts</div>
+      </div>
+      <div class="kpi red">
+        <div class="kpi-label">Cancelled</div>
+        <div class="kpi-value">${g.cancelled}</div>
+        <div class="kpi-sub">tickets</div>
+      </div>
+      <div class="kpi amber">
+        <div class="kpi-label">Avg Ticket</div>
+        <div class="kpi-value">$${g.total > 0 ? (g.revenue/g.total).toFixed(0) : '—'}</div>
+        <div class="kpi-sub">per ticket</div>
+      </div>
+    </div>
+
+    <!-- ── CONCERT CARDS ── -->
+    <div style="margin-bottom:10px;">
+      <div class="section-title">By Concert Night</div>
+    </div>
+    <div class="concert-grid" id="concertGrid">
+      ${d.concerts.map(c => concertCard(c, g.total)).join('')}
+    </div>
+
+    <!-- ── BOTTOM TWO-COL ── -->
+    <div class="two-col">
+
+      <!-- Recent Check-ins -->
+      <div>
+        <div class="section-head">
+          <div class="section-title">Recent Check-ins</div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="checkin-list">
+              ${d.recentCheckins.length === 0
+                ? '<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px;">No check-ins yet.</div>'
+                : d.recentCheckins.map(r => `
+                    <div class="checkin-row">
+                      <div class="checkin-name">${esc(r.name)}</div>
+                      <div class="checkin-type">${esc(r.type)}</div>
+                      <div class="checkin-time">${r.time}</div>
+                      <div class="checkin-concert">${r.concertId}</div>
+                    </div>`).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ticket Type Breakdown (across all concerts) -->
+      <div>
+        <div class="section-head">
+          <div class="section-title">Ticket Type Breakdown</div>
+        </div>
+        <div class="card">
+          <div class="card-body" style="padding:20px;">
+            ${typeBreakdownAll(d.attendees)}
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── FULL ATTENDEE LIST ── -->
+    <div class="section-head">
+      <div class="section-title">All Attendees</div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);">
+        ${allAttendees.length} records
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="table-search-wrap">
+        <input type="search" class="table-search" id="attSearch"
+               placeholder="Search by name, email, ticket ID, or concert…"
+               oninput="filterAttendees(this.value)">
+      </div>
+      <div class="table-scroll">
+        <table class="att-table" id="attTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Ticket ID</th>
+              <th>Type</th>
+              <th>Qty</th>
+              <th>Paid</th>
+              <th>Concert</th>
+              <th>Status</th>
+              <th>Checked In</th>
+            </tr>
+          </thead>
+          <tbody id="attBody">
+            ${renderAttendeeRows(allAttendees)}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function concertCard(c, grandTotal) {
+  const isActive = c.active;
+  const maxType  = c.byType.length > 0 ? Math.max(...c.byType.map(t => t.sold)) : 1;
+
+  return `
+    <div class="concert-card ${isActive ? 'active-night' : ''}">
+      ${isActive ? '<div class="active-pill">● ACTIVE</div>' : ''}
+      <div class="concert-name">${esc(c.name)}</div>
+      <div class="concert-meta">${c.date}${c.time ? ' · ' + c.time : ''}</div>
+
+      <div class="prog-wrap">
+        <div class="prog-header">
+          <span>Check-in progress</span>
+          <span>${c.percent}%</span>
+        </div>
+        <div class="prog-track">
+          <div class="prog-fill" style="width:${Math.max(c.percent,1)}%"></div>
+        </div>
+      </div>
+
+      <div class="mini-stats">
+        <div class="mini-stat">
+          <div class="mini-stat-num g">${c.checkedIn}</div>
+          <div class="mini-stat-lbl">In</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-stat-num o">${c.remaining}</div>
+          <div class="mini-stat-lbl">Pending</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-stat-num m">$${c.revenue.toLocaleString()}</div>
+          <div class="mini-stat-lbl">Revenue</div>
+        </div>
+      </div>
+
+      ${c.byType.length > 0 ? `
+        <div class="type-rows">
+          ${c.byType.map(t => `
+            <div class="type-row">
+              <div class="type-name">${esc(t.type)}</div>
+              <div class="type-bar-bg">
+                <div class="type-bar-fill" style="width:${Math.round((t.sold/maxType)*100)}%"></div>
+              </div>
+              <div class="type-count">${t.sold}</div>
+              <div class="type-rev">$${t.revenue.toLocaleString()}</div>
+            </div>`).join('')}
+        </div>` : '<div style="color:var(--text3);font-size:12px;">No ticket data yet.</div>'}
+    </div>`;
+}
+
+function typeBreakdownAll(attendees) {
+  const map = {};
+  attendees.forEach(a => {
+    if (a.status === 'CANCELLED') return;
+    if (!map[a.type]) map[a.type] = { sold:0, revenue:0 };
+    map[a.type].sold    += a.qty;
+    map[a.type].revenue += a.price * a.qty;
+  });
+  const rows = Object.entries(map).sort((a,b)=>b[1].sold-a[1].sold);
+  if (!rows.length) return '<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px;">No data.</div>';
+  const max = Math.max(...rows.map(r=>r[1].sold));
+
+  return `<div class="type-rows" style="gap:12px;">
+    ${rows.map(([type, d]) => `
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+          <span style="font-size:14px;font-weight:500;">${esc(type)}</span>
+          <span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text2);">${d.sold} tickets · $${d.revenue.toLocaleString()}</span>
+        </div>
+        <div class="type-bar-bg" style="height:8px;">
+          <div class="type-bar-fill" style="width:${Math.round((d.sold/max)*100)}%;height:100%;background:var(--blue);border-radius:99px;"></div>
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════
+//  ATTENDEE TABLE
+// ════════════════════════════════════════════════════════
+function renderAttendeeRows(list) {
+  if (!list.length) return '<tr class="empty-row"><td colspan="8">No attendees found.</td></tr>';
+  return list.map(a => `
+    <tr>
+      <td style="font-weight:500;">${esc(a.name)}</td>
+      <td><span style="font-family:'DM Mono',monospace;font-size:12px;">${esc(a.ticketId)}</span></td>
+      <td style="color:var(--text2);">${esc(a.type)}</td>
+      <td style="font-family:'DM Mono',monospace;">${a.qty}</td>
+      <td style="font-family:'DM Mono',monospace;">$${a.price}</td>
+      <td><span class="concert-tag">${esc(a.concertId)}</span></td>
+      <td><span class="status-badge ${a.status}">${a.status.replace('_',' ')}</span></td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text2);">${a.checkinTime || '—'}</td>
+    </tr>`).join('');
+}
+
+function filterAttendees(q) {
+  const term = q.toLowerCase().trim();
+  const filtered = term
+    ? allAttendees.filter(a =>
+        a.name.toLowerCase().includes(term) ||
+        (a.email||'').toLowerCase().includes(term) ||
+        a.ticketId.toLowerCase().includes(term) ||
+        a.concertId.toLowerCase().includes(term) ||
+        a.type.toLowerCase().includes(term) ||
+        a.status.toLowerCase().includes(term)
+      )
+    : allAttendees;
+  document.getElementById('attBody').innerHTML = renderAttendeeRows(filtered);
+}
+
+function esc(s) {
+  return String(s||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════
+window.addEventListener('load', checkSetup);
+</script>
+</body>
+</html>
