@@ -26,9 +26,10 @@
   --amber-soft: rgba(245,158,11,0.12);
   --err:        #f04060;
   --err-soft:   rgba(240,64,96,0.12);
-  --text:       #f0ebe8;       /* warm white — easier on eyes */
-  --text2:      #a09088;       /* secondary */
-  --text3:      #5a4a44;       /* muted */
+  --text:       #f0ebe8;       /* warm white — primary */
+  --text2:      #b8aea8;       /* secondary — readable body text */
+  --text3:      #7a6a64;       /* readable muted — labels, meta, placeholders */
+  --text4:      #4a3c38;       /* truly invisible — inactive tabs, decorative only */
   --tap:        52px;
   --r:          14px;
 }
@@ -70,7 +71,7 @@ header {
 }
 .brand-sub {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; color: var(--text3);
+  font-size: 10px; color: var(--text4);
   letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px;
 }
 .header-badge {
@@ -89,7 +90,7 @@ nav {
 .tab {
   flex: 1; min-height: 50px;
   display: flex; align-items: center; justify-content: center; gap: 6px;
-  font-size: 14px; font-weight: 500; color: var(--text3);
+  font-size: 14px; font-weight: 500; color: var(--text4);
   cursor: pointer; border-bottom: 2.5px solid transparent;
   transition: color .2s, border-color .2s;
 }
@@ -136,7 +137,7 @@ nav {
 .scan-status { width: 100%; max-width: 300px; display: flex; align-items: center; gap: 10px; }
 .status-dot {
   width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
-  background: var(--text3); transition: background .3s;
+  background: var(--text4); transition: background .3s;
 }
 .status-dot.scanning { background: var(--red); animation: pulse 1.4s ease infinite; }
 .status-dot.ok       { background: var(--green); }
@@ -197,7 +198,7 @@ nav {
 .dismiss-btn {
   width: 100%; margin-top: 14px; min-height: 46px;
   border-radius: 10px; border: 1.5px solid var(--border2);
-  background: transparent; color: var(--text3);
+  background: transparent; color: var(--text2);
   font-size: 14px; font-family: 'Inter', sans-serif; cursor: pointer;
   transition: background .2s;
 }
@@ -223,7 +224,7 @@ nav {
   outline: none; -webkit-appearance: none; transition: border-color .2s;
 }
 .search-input:focus { border-color: var(--red-dim); }
-.search-input::placeholder { color: var(--text3); }
+.search-input::placeholder { color: var(--text3); opacity: 0.7; }
 .search-go-btn {
   min-height: var(--tap); padding: 0 20px;
   background: var(--red); color: #fff;
@@ -239,7 +240,7 @@ nav {
   transition: border-color .3s;
 }
 .att-name { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
-.att-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); line-height: 1.6; }
+.att-meta { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text2); line-height: 1.6; }
 .att-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
 
 .badge {
@@ -259,7 +260,7 @@ nav {
 }
 .ci-btn:disabled { opacity: .4; cursor: default; }
 
-.empty-msg { text-align: center; padding: 40px 16px; color: var(--text3); font-size: 14px; line-height: 1.7; }
+.empty-msg { text-align: center; padding: 40px 16px; color: var(--text2); font-size: 14px; line-height: 1.7; }
 
 /* ══════════════════════════
    STATS PANEL
@@ -286,7 +287,7 @@ nav {
 }
 .stat-num.g { color: var(--green); }
 .stat-num.r { color: var(--red); }
-.stat-num.m { color: var(--text3); }
+.stat-num.m { color: var(--text2); }
 .stat-num.e { color: var(--err); }
 .stat-lbl { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; }
 
@@ -307,7 +308,7 @@ nav {
 .refresh-btn:active { background: var(--border2); }
 
 /* Spinner */
-.spin-wrap { display:flex; align-items:center; justify-content:center; gap:10px; padding:32px; color:var(--text3); font-size:14px; }
+.spin-wrap { display:flex; align-items:center; justify-content:center; gap:10px; padding:32px; color:var(--text2); font-size:14px; }
 .spinner { width:18px; height:18px; border:2.5px solid var(--border2); border-top-color:var(--red); border-radius:50%; animation:spin .7s linear infinite; }
 @keyframes spin { to{transform:rotate(360deg)} }
 
