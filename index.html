@@ -605,7 +605,7 @@ nav {
       <div class="brand-icon">🎵</div>
       <div>
         <div class="brand-name">Door Scanner</div>
-        <div class="brand-sub">Staff Only</div>
+        <div class="brand-sub" id="brandSubLine">Staff Only</div>
       </div>
     </div>
     <div class="header-badge" onclick="goTab('stats')" id="liveBadge">📊 Stats</div>
@@ -1004,6 +1004,15 @@ function renderStats(s) {
 window.addEventListener('load', () => {
   checkConfig();
   if (APPS_SCRIPT_URL) {
+    // Load config → show active concert name in header
+    api('config').then(cfg => {
+      if (cfg && cfg.success && cfg.activeConcert) {
+        const c = cfg.activeConcert;
+        document.getElementById('brandSubLine').textContent =
+          c.eventName + (c.eventDate ? '  ·  ' + c.eventDate : '');
+      }
+    }).catch(() => {});
+
     api('stats').then(s => {
       if (s && s.success)
         document.getElementById('liveBadge').textContent = `✅ ${s.checkedIn} / ${s.total}`;
