@@ -411,7 +411,6 @@ nav {
         <div class="result-headline" id="rHead"></div>
       </div>
       <div class="rfields" id="rFields"></div>
-      <button class="dismiss-btn" onclick="dismissResult()">↩ Dismiss &amp; scan next</button>
     </div>
   </div>
 
@@ -519,32 +518,108 @@ async function onScan(id) {
   setTimeout(()=>{ cooldown=false; }, 3500);
 }
 
+// 마지막으로 스캔한 티켓 ID 기억 (부분 체크인용)
+let lastScannedId = '';
+
 function showResult(r) {
   const card=document.getElementById('resultCard');
   const fields=document.getElementById('rFields');
   fields.innerHTML=''; card.className='result-card show';
 
   if (r.success) {
-    card.classList.add('ok'); setRI('✅'); setRH('Welcome! Enjoy the concert!');
+    // ── 전원 체크인 완료 ──
+    const guestStr = (r.quantity||1) > 1 ? r.checkedCount + ' of ' + r.quantity + ' guests' : '1 guest';
+    card.classList.add('ok'); setRI('✅'); setRH(r.message || 'Welcome!');
     addF(fields,'Name',r.name); addF(fields,'Type',r.ticketType);
-    if((r.quantity||1)>1) addF(fields,'Party',r.quantity+' guests');
+    addF(fields,'Guests',guestStr);
     addF(fields,'In at',r.checkinTime);
     setStatus('ok','Admitted ✓');
     flash('g'); if(navigator.vibrate) navigator.vibrate([80,40,80]);
+    document.getElementById('resultCard').innerHTML +=
+      '<button class="dismiss-btn" onclick="dismissResult()">↩ Dismiss & scan next</button>';
+
+  } else if (r.status === 'NEEDS_COUNT' || r.status === 'PARTIAL') {
+    // ── 인원 선택 UI ──
+    lastScannedId = r.ticketId || lastScannedId;
+    const already = r.checkedCount || 0;
+    const total   = r.quantity || 1;
+    const remain  = total - already;
+
+    card.classList.add('warn');
+    setRI('👥');
+    setRH(already > 0
+      ? already + ' of ' + total + ' already in — how many more?'
+      : 'How many guests entering now?');
+    addF(fields,'Name', r.name);
+    addF(fields,'Type', r.ticketType);
+    addF(fields,'Total tickets', total + ' guests');
+    if (already > 0) addF(fields,'Already in', already + ' guests');
+
+    // 선택 버튼 생성
+    const btnsDiv = document.createElement('div');
+    btnsDiv.className = 'count-btns';
+
+    for (let n = 1; n < remain; n++) {
+      const btn = document.createElement('button');
+      btn.className = 'count-btn';
+      btn.textContent = n + (n === 1 ? ' guest' : ' guests');
+      btn.onclick = () => doCheckin(lastScannedId, n);
+      btnsDiv.appendChild(btn);
+    }
+    // 전원 버튼
+    const allBtn = document.createElement('button');
+    allBtn.className = 'count-btn all';
+    allBtn.textContent = remain === total ? 'All ' + total : 'All remaining (' + remain + ')';
+    allBtn.onclick = () => doCheckin(lastScannedId, remain);
+    btnsDiv.appendChild(allBtn);
+
+    fields.appendChild(btnsDiv);
+
+    const dismiss = document.createElement('button');
+    dismiss.className = 'dismiss-btn';
+    dismiss.textContent = '↩ Cancel';
+    dismiss.onclick = dismissResult;
+    fields.appendChild(dismiss);
+
+    setStatus('warn', 'Select guests');
+    if(navigator.vibrate) navigator.vibrate(60);
+
   } else if (r.status==='ALREADY_CHECKED_IN') {
     card.classList.add('warn'); setRI('⚠️'); setRH('Already checked in!');
-    addF(fields,'Name',r.name); addF(fields,'Type',r.ticketType); addF(fields,'First entry',r.checkinTime);
+    addF(fields,'Name',r.name); addF(fields,'Type',r.ticketType);
+    if (r.quantity > 1) addF(fields,'Party',r.checkedCount + ' of ' + r.quantity + ' guests');
+    addF(fields,'First entry',r.checkinTime);
     setStatus('warn','Duplicate scan');
     flash('r'); if(navigator.vibrate) navigator.vibrate([200,80,200]);
+    document.getElementById('resultCard').innerHTML +=
+      '<button class="dismiss-btn" onclick="dismissResult()">↩ Dismiss & scan next</button>';
+
   } else if (r.status==='CANCELLED') {
     card.classList.add('fail'); setRI('🚫'); setRH('Ticket cancelled');
     if(r.name) addF(fields,'Name',r.name);
     setStatus('fail','Cancelled'); flash('r');
+    document.getElementById('resultCard').innerHTML +=
+      '<button class="dismiss-btn" onclick="dismissResult()">↩ Dismiss & scan next</button>';
+
   } else {
     card.classList.add('fail'); setRI('❌'); setRH(r.message||r.error||'Not found');
     setStatus('fail','Not found'); flash('r'); if(navigator.vibrate) navigator.vibrate(300);
+    document.getElementById('resultCard').innerHTML +=
+      '<button class="dismiss-btn" onclick="dismissResult()">↩ Dismiss & scan next</button>';
   }
-  setTimeout(()=>{ if(scanning) setStatus('scanning','Scanning — point at ticket QR code'); }, 4500);
+  setTimeout(()=>{ if(scanning && !['NEEDS_COUNT','PARTIAL'].includes(r.status))
+    setStatus('scanning','Scanning — point at ticket QR code'); }, 4500);
+}
+
+// 인원 수 확정 후 체크인 처리
+async function doCheckin(ticketId, count) {
+  document.getElementById('rHead').textContent = 'Checking in ' + count + '...';
+  try {
+    const r = await api('checkin', { ticketId, count });
+    showResult(Object.assign(r, { ticketId }));
+  } catch(e) {
+    showResult({ success:false, message:'Network error: ' + e.message });
+  }
 }
 
 function addF(c,l,v) {
