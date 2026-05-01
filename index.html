@@ -518,105 +518,187 @@ async function onScan(id) {
   setTimeout(()=>{ cooldown=false; }, 3500);
 }
 
-// 마지막으로 스캔한 티켓 ID 기억 (부분 체크인용)
+// 마지막으로 스캔한 티켓 ID & 부분체크인 상태 기억
 let lastScannedId = '';
+let stepperCount  = 1;
+let stepperMax    = 1;
+
+function addDismiss(fields) {
+  // 이미 dismiss 버튼이 있으면 추가 안 함
+  if (fields.querySelector('.dismiss-btn')) return;
+  const btn = document.createElement('button');
+  btn.className = 'dismiss-btn';
+  btn.innerHTML = '↩ Dismiss & scan next';
+  btn.onclick = dismissResult;
+  fields.appendChild(btn);
+}
 
 function showResult(r) {
-  const card=document.getElementById('resultCard');
-  const fields=document.getElementById('rFields');
-  fields.innerHTML=''; card.className='result-card show';
+  const card   = document.getElementById('resultCard');
+  const fields = document.getElementById('rFields');
+  // 전체 초기화 (innerHTML += 버그 방지)
+  fields.innerHTML = '';
+  card.className = 'result-card show';
 
   if (r.success) {
-    // ── 전원 체크인 완료 ──
-    const guestStr = (r.quantity||1) > 1 ? r.checkedCount + ' of ' + r.quantity + ' guests' : '1 guest';
-    card.classList.add('ok'); setRI('✅'); setRH(r.message || 'Welcome!');
-    addF(fields,'Name',r.name); addF(fields,'Type',r.ticketType);
-    addF(fields,'Guests',guestStr);
-    addF(fields,'In at',r.checkinTime);
+    // ── 체크인 완료 ──
+    const guestStr = (r.quantity||1) > 1
+      ? r.checkedCount + ' of ' + r.quantity + ' guests'
+      : '1 guest';
+    card.classList.add('ok');
+    setRI('✅');
+    setRH(r.message || 'Welcome!');
+    addF(fields,'Name', r.name);
+    addF(fields,'Type', r.ticketType);
+    addF(fields,'Guests', guestStr);
+    addF(fields,'In at', r.checkinTime);
     setStatus('ok','Admitted ✓');
-    flash('g'); if(navigator.vibrate) navigator.vibrate([80,40,80]);
-    document.getElementById('resultCard').innerHTML +=
-      '<button class="dismiss-btn" onclick="dismissResult()">↩ Dismiss & scan next</button>';
+    flash('g');
+    if(navigator.vibrate) navigator.vibrate([80,40,80]);
+    addDismiss(fields);
 
   } else if (r.status === 'NEEDS_COUNT' || r.status === 'PARTIAL') {
-    // ── 인원 선택 UI ──
+    // ── 인원 선택 스테퍼 UI ──
     lastScannedId = r.ticketId || lastScannedId;
     const already = r.checkedCount || 0;
     const total   = r.quantity || 1;
     const remain  = total - already;
+    stepperMax    = remain;
+    stepperCount  = remain; // 기본값: 남은 인원 전체
 
     card.classList.add('warn');
     setRI('👥');
     setRH(already > 0
-      ? already + ' of ' + total + ' already in — how many more?'
+      ? already + ' of ' + total + ' already in'
       : 'How many guests entering now?');
-    addF(fields,'Name', r.name);
-    addF(fields,'Type', r.ticketType);
-    addF(fields,'Total tickets', total + ' guests');
+
+    addF(fields,'Name',  r.name);
+    addF(fields,'Type',  r.ticketType);
+    addF(fields,'Total', total + ' guests');
     if (already > 0) addF(fields,'Already in', already + ' guests');
+    addF(fields,'Max now', remain + ' guests');
 
-    // 선택 버튼 생성
-    const btnsDiv = document.createElement('div');
-    btnsDiv.className = 'count-btns';
+    // 스테퍼
+    const wrap = document.createElement('div');
+    wrap.className = 'stepper-wrap';
 
-    for (let n = 1; n < remain; n++) {
-      const btn = document.createElement('button');
-      btn.className = 'count-btn';
-      btn.textContent = n + (n === 1 ? ' guest' : ' guests');
-      btn.onclick = () => doCheckin(lastScannedId, n);
-      btnsDiv.appendChild(btn);
+    const row = document.createElement('div');
+    row.className = 'stepper-row';
+
+    const minusBtn = document.createElement('button');
+    minusBtn.className = 'stepper-btn';
+    minusBtn.textContent = '−';
+    minusBtn.onclick = () => {
+      if (stepperCount > 1) {
+        stepperCount--;
+        valEl.textContent = stepperCount;
+        subEl.textContent = stepperCount === 1 ? 'guest' : 'guests';
+        updateConfirmBtn();
+      }
+    };
+
+    const valEl = document.createElement('div');
+    valEl.className = 'stepper-val';
+    valEl.textContent = stepperCount;
+
+    const subEl = document.createElement('div');
+    subEl.className = 'stepper-sub';
+    subEl.textContent = stepperCount === 1 ? 'guest' : 'guests';
+
+    const valWrap = document.createElement('div');
+    valWrap.style.flex = '1';
+    valWrap.style.textAlign = 'center';
+    valWrap.style.borderLeft = '1px solid var(--border)';
+    valWrap.style.borderRight = '1px solid var(--border)';
+    valWrap.style.padding = '10px 0';
+    valWrap.appendChild(valEl);
+    valWrap.appendChild(subEl);
+
+    const plusBtn = document.createElement('button');
+    plusBtn.className = 'stepper-btn';
+    plusBtn.textContent = '+';
+    plusBtn.onclick = () => {
+      if (stepperCount < stepperMax) {
+        stepperCount++;
+        valEl.textContent = stepperCount;
+        subEl.textContent = stepperCount === 1 ? 'guest' : 'guests';
+        updateConfirmBtn();
+      }
+    };
+
+    row.appendChild(minusBtn);
+    row.appendChild(valWrap);
+    row.appendChild(plusBtn);
+
+    const confirmBtn = document.createElement('button');
+    confirmBtn.className = 'checkin-confirm-btn';
+    confirmBtn.id = 'confirmCheckinBtn';
+    confirmBtn.textContent = 'Check In ' + stepperCount + (stepperCount === 1 ? ' Guest' : ' Guests');
+    confirmBtn.onclick = () => doCheckin(lastScannedId, stepperCount);
+
+    function updateConfirmBtn() {
+      confirmBtn.textContent = 'Check In ' + stepperCount + (stepperCount === 1 ? ' Guest' : ' Guests');
     }
-    // 전원 버튼
-    const allBtn = document.createElement('button');
-    allBtn.className = 'count-btn all';
-    allBtn.textContent = remain === total ? 'All ' + total : 'All remaining (' + remain + ')';
-    allBtn.onclick = () => doCheckin(lastScannedId, remain);
-    btnsDiv.appendChild(allBtn);
 
-    fields.appendChild(btnsDiv);
+    wrap.appendChild(row);
+    wrap.appendChild(confirmBtn);
+    fields.appendChild(wrap);
 
-    const dismiss = document.createElement('button');
-    dismiss.className = 'dismiss-btn';
-    dismiss.textContent = '↩ Cancel';
-    dismiss.onclick = dismissResult;
-    fields.appendChild(dismiss);
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'dismiss-btn';
+    cancelBtn.innerHTML = '↩ Cancel';
+    cancelBtn.onclick = dismissResult;
+    fields.appendChild(cancelBtn);
 
-    setStatus('warn', 'Select guests');
+    setStatus('warn','Select guests');
     if(navigator.vibrate) navigator.vibrate(60);
 
-  } else if (r.status==='ALREADY_CHECKED_IN') {
-    card.classList.add('warn'); setRI('⚠️'); setRH('Already checked in!');
-    addF(fields,'Name',r.name); addF(fields,'Type',r.ticketType);
-    if (r.quantity > 1) addF(fields,'Party',r.checkedCount + ' of ' + r.quantity + ' guests');
-    addF(fields,'First entry',r.checkinTime);
+  } else if (r.status === 'ALREADY_CHECKED_IN') {
+    card.classList.add('warn');
+    setRI('⚠️');
+    setRH('Already checked in!');
+    addF(fields,'Name', r.name);
+    addF(fields,'Type', r.ticketType);
+    if ((r.quantity||1) > 1)
+      addF(fields,'Party', r.checkedCount + ' of ' + r.quantity + ' guests');
+    addF(fields,'First entry', r.checkinTime);
     setStatus('warn','Duplicate scan');
-    flash('r'); if(navigator.vibrate) navigator.vibrate([200,80,200]);
-    document.getElementById('resultCard').innerHTML +=
-      '<button class="dismiss-btn" onclick="dismissResult()">↩ Dismiss & scan next</button>';
+    flash('r');
+    if(navigator.vibrate) navigator.vibrate([200,80,200]);
+    addDismiss(fields);
 
-  } else if (r.status==='CANCELLED') {
-    card.classList.add('fail'); setRI('🚫'); setRH('Ticket cancelled');
-    if(r.name) addF(fields,'Name',r.name);
-    setStatus('fail','Cancelled'); flash('r');
-    document.getElementById('resultCard').innerHTML +=
-      '<button class="dismiss-btn" onclick="dismissResult()">↩ Dismiss & scan next</button>';
+  } else if (r.status === 'CANCELLED') {
+    card.classList.add('fail');
+    setRI('🚫');
+    setRH('Ticket cancelled');
+    if(r.name) addF(fields,'Name', r.name);
+    setStatus('fail','Cancelled');
+    flash('r');
+    addDismiss(fields);
 
   } else {
-    card.classList.add('fail'); setRI('❌'); setRH(r.message||r.error||'Not found');
-    setStatus('fail','Not found'); flash('r'); if(navigator.vibrate) navigator.vibrate(300);
-    document.getElementById('resultCard').innerHTML +=
-      '<button class="dismiss-btn" onclick="dismissResult()">↩ Dismiss & scan next</button>';
+    card.classList.add('fail');
+    setRI('❌');
+    setRH(r.message || r.error || 'Not found');
+    setStatus('fail','Not found');
+    flash('r');
+    if(navigator.vibrate) navigator.vibrate(300);
+    addDismiss(fields);
   }
-  setTimeout(()=>{ if(scanning && !['NEEDS_COUNT','PARTIAL'].includes(r.status))
-    setStatus('scanning','Scanning — point at ticket QR code'); }, 4500);
+
+  setTimeout(() => {
+    if (scanning && !['NEEDS_COUNT','PARTIAL'].includes(r.status))
+      setStatus('scanning','Scanning — point at ticket QR code');
+  }, 4500);
 }
 
-// 인원 수 확정 후 체크인 처리
+// 인원 수 확정 후 체크인
 async function doCheckin(ticketId, count) {
-  document.getElementById('rHead').textContent = 'Checking in ' + count + '...';
+  const btn = document.getElementById('confirmCheckinBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Checking in...'; }
   try {
-    const r = await api('checkin', { ticketId, count });
-    showResult(Object.assign(r, { ticketId }));
+    const res = await api('checkin', { ticketId, count });
+    showResult(Object.assign(res, { ticketId }));
   } catch(e) {
     showResult({ success:false, message:'Network error: ' + e.message });
   }
