@@ -503,6 +503,7 @@ function stopScan() {
 async function onScan(id) {
   if (cooldown) return;
   cooldown=true;
+  lastScannedId = String(id).trim(); // ← QR에서 읽은 즉시 저장 (가장 확실한 방법)
   if (navigator.vibrate) navigator.vibrate(60);
   setStatus('scanning','Looking up ticket…');
   document.getElementById('procBar').classList.add('on');
