@@ -578,24 +578,27 @@ function showResult(r) {
     if (already > 0) addF(fields,'Already in', already + ' guests');
     addF(fields,'Max now', remain + ' guests');
 
-    // 스테퍼
+    // ── 스테퍼 UI (가로형) ──
     const wrap = document.createElement('div');
     wrap.className = 'stepper-wrap';
 
     const row = document.createElement('div');
     row.className = 'stepper-row';
 
+    // − 버튼
     const minusBtn = document.createElement('button');
     minusBtn.className = 'stepper-btn';
     minusBtn.textContent = '−';
     minusBtn.onclick = () => {
       if (stepperCount > 1) {
         stepperCount--;
-        valEl.textContent = stepperCount;
-        subEl.textContent = stepperCount === 1 ? 'guest' : 'guests';
-        updateConfirmBtn();
+        updateStepper();
       }
     };
+
+    // 중앙 숫자 + 단위
+    const centerEl = document.createElement('div');
+    centerEl.className = 'stepper-center';
 
     const valEl = document.createElement('div');
     valEl.className = 'stepper-val';
@@ -605,40 +608,42 @@ function showResult(r) {
     subEl.className = 'stepper-sub';
     subEl.textContent = stepperCount === 1 ? 'guest' : 'guests';
 
-    const valWrap = document.createElement('div');
-    valWrap.style.flex = '1';
-    valWrap.style.textAlign = 'center';
-    valWrap.style.borderLeft = '1px solid var(--border)';
-    valWrap.style.borderRight = '1px solid var(--border)';
-    valWrap.style.padding = '10px 0';
-    valWrap.appendChild(valEl);
-    valWrap.appendChild(subEl);
+    centerEl.appendChild(valEl);
+    centerEl.appendChild(subEl);
 
+    // + 버튼
     const plusBtn = document.createElement('button');
     plusBtn.className = 'stepper-btn';
     plusBtn.textContent = '+';
     plusBtn.onclick = () => {
       if (stepperCount < stepperMax) {
         stepperCount++;
-        valEl.textContent = stepperCount;
-        subEl.textContent = stepperCount === 1 ? 'guest' : 'guests';
-        updateConfirmBtn();
+        updateStepper();
       }
     };
 
     row.appendChild(minusBtn);
-    row.appendChild(valWrap);
+    row.appendChild(centerEl);
     row.appendChild(plusBtn);
 
+    // Check In 버튼
     const confirmBtn = document.createElement('button');
     confirmBtn.className = 'checkin-confirm-btn';
     confirmBtn.id = 'confirmCheckinBtn';
-    confirmBtn.textContent = 'Check In ' + stepperCount + (stepperCount === 1 ? ' Guest' : ' Guests');
+    confirmBtn.textContent = 'Check In';
     confirmBtn.onclick = () => doCheckin(lastScannedId, stepperCount);
 
-    function updateConfirmBtn() {
-      confirmBtn.textContent = 'Check In ' + stepperCount + (stepperCount === 1 ? ' Guest' : ' Guests');
+    function updateStepper() {
+      valEl.textContent = stepperCount;
+      subEl.textContent = stepperCount === 1 ? 'guest' : 'guests';
+      // − 버튼 시각적 비활성화
+      minusBtn.style.opacity = stepperCount <= 1 ? '0.3' : '1';
+      // + 버튼 시각적 비활성화
+      plusBtn.style.opacity = stepperCount >= stepperMax ? '0.3' : '1';
     }
+
+    // 초기 상태 반영
+    updateStepper();
 
     wrap.appendChild(row);
     wrap.appendChild(confirmBtn);
