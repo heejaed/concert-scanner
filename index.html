@@ -390,7 +390,7 @@ nav {
 <div class="shell">
   <header>
     <div class="brand">
-      <div class="brand-icon">🎵</div>
+      <div class="brand-icon" onclick="openConfig()" title="Tap to change API URL">🎵</div>
       <div>
         <div class="brand-name">Door Scanner</div>
         <div class="brand-sub" id="brandSubLine">Staff Only</div>
@@ -784,14 +784,33 @@ async function manualCI(id,btn) {
   btn.disabled=true; btn.textContent='…';
   try {
     const res=await api('lookup',{ticketId:id});
-    const card=document.getElementById('ac-'+id);
     if (res.success) {
-      card.style.borderColor='var(--green)'; btn.textContent='✓ Done';
-      btn.style.background='var(--red)'; btn.style.color='#fff';
-      card.querySelector('.badge').className='badge CHECKED_IN';
-      card.querySelector('.badge').textContent='CHECKED IN';
-    } else { btn.textContent='Fail'; btn.style.background='var(--err)'; btn.disabled=false; }
+      // qty=1 바로 체크인 성공
+      const card=document.getElementById('ac-'+id);
+      if(card){
+        card.style.borderColor='var(--green)'; btn.textContent='✓ Done';
+        btn.style.background='var(--green)'; btn.style.color='#fff';
+        const badge=card.querySelector('.badge');
+        if(badge){badge.className='badge CHECKED_IN';badge.textContent='CHECKED IN';}
+      }
+    } else if (res.status==='NEEDS_COUNT' || res.status==='PARTIAL') {
+      // qty>1 → 스테퍼 UI 표시
+      lastScannedId = id;
+      btn.textContent='Select'; btn.disabled=false;
+      showResult(Object.assign(res, {ticketId:id}));
+    } else {
+      btn.textContent='Fail'; btn.style.background='var(--err)'; btn.disabled=false;
+    }
   } catch(e){ btn.textContent='Error'; btn.disabled=false; }
+}
+
+function openConfig() {
+  const cur = localStorage.getItem('choir_scanner_url') || '';
+  const url = prompt('Apps Script Deployment URL:', cur);
+  if (url !== null && url.trim()) {
+    localStorage.setItem('choir_scanner_url', url.trim());
+    location.reload();
+  }
 }
 
 // ── STATS ──
