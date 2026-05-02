@@ -174,19 +174,19 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 @media(max-width:720px){.two-col{grid-template-columns:1fr;}}
 
 /* ── CARD ── */
-.card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.05);}
+.card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.05);width:100%;box-sizing:border-box;}
 .card-head{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .card-title{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;}
 
 /* ── CHECKINS ── */
 .ci-list{display:flex;flex-direction:column;}
-.ci-row{display:grid;grid-template-columns:1fr 100px 88px 72px;gap:10px;align-items:center;padding:10px 18px;border-bottom:1px solid var(--border);font-size:13px;transition:background .15s;}
+.ci-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,90px) minmax(0,80px) minmax(0,60px);gap:8px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px;transition:background .15s;overflow:hidden;}
 .ci-row:last-child{border-bottom:none;}
 .ci-row:hover{background:var(--surface2);}
-.ci-name{font-weight:600;}
-.ci-type{color:var(--text2);font-size:12px;}
-.ci-time{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);}
-.ci-cid{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);text-align:right;}
+.ci-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ci-type{color:var(--text2);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ci-time{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ci-cid{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
 /* ── BREAKDOWN ── */
 .bd-list{display:flex;flex-direction:column;gap:14px;padding:18px;}
