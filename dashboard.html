@@ -300,7 +300,8 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 function render(d) {
   allAttendees = d.attendees || [];
   document.getElementById('orgName').textContent   = d.org || 'Staff Dashboard';
-  document.getElementById('seasonTag').textContent = d.season || '';
+  const seasonTagEl = document.getElementById('seasonTag');
+  if (seasonTagEl) seasonTagEl.textContent = d.season || '';
   document.getElementById('lastUpdate').textContent = 'Updated ' + d.generatedAt;
   const g = d.grand;
 
