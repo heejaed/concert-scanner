@@ -742,8 +742,26 @@ function showResult(r) {
     card.classList.add('fail');
     setRI('🚫');
     setRH('Ticket cancelled');
-    if(r.name) addF(fields,'Name', r.name);
-    setStatus('fail','Cancelled');
+    if (r.name) addF(fields, 'Name', r.name);
+    if (r.altTicket) {
+      // 같은 오더의 대체 티켓 발견
+      const alt = r.altTicket;
+      const altCid = alt.concertId || '';
+      const altNight = altCid.includes('SAT') ? '🗓 Saturday'
+                     : altCid.includes('SUN') ? '🗓 Sunday'
+                     : altCid || '🗓 Sat or Sun';
+      const altDiv = document.createElement('div');
+      altDiv.style.cssText = 'margin-top:14px;padding:12px 14px;background:var(--surface);border:1.5px solid var(--green);border-radius:10px;';
+      altDiv.innerHTML = `
+        <div style="font-size:11px;color:#27ae60;font-family:'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;">✅ Valid ticket found for this order</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px;">${alt.name || r.name}</div>
+        <div style="font-size:12px;color:var(--text2);">${alt.ticketType} · ${alt.quantity > 1 ? alt.quantity + ' guests' : '1 guest'}</div>
+        <div style="font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:10px;">${alt.ticketId} · ${altNight}</div>
+        <button onclick="onScan('${alt.ticketId}')" style="width:100%;min-height:48px;border-radius:10px;border:none;background:#27ae60;color:#fff;font-size:15px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;">Check In with This Ticket</button>
+      `;
+      fields.appendChild(altDiv);
+    }
+    setStatus('fail', 'Cancelled');
     flash('r');
     addDismiss(fields);
 
