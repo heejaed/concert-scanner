@@ -789,17 +789,28 @@ function renderSearch(data,list) {
   if (!data.success||!data.results||!data.results.length) {
     list.innerHTML='<div class="empty-msg">No attendees found.</div>'; return;
   }
-  list.innerHTML=data.results.map(r=>`
+  list.innerHTML=data.results.map(r=>{
+    const cid = r.concertId || '';
+    const cidLabel = cid.includes('SAT') ? '🗓 Saturday'
+                   : cid.includes('SUN') ? '🗓 Sunday'
+                   : cid ? '🗓 ' + cid
+                   : '🗓 Sat or Sun';
+    const cidColor = cid.includes('SAT') ? 'var(--red)'
+                   : cid.includes('SUN') ? '#2471a3'
+                   : 'var(--text3)';
+    return `
     <div class="attendee-card" id="ac-${r.ticketId}">
       <div>
         <div class="att-name">${r.name}</div>
         <div class="att-meta">${r.ticketType} · qty ${r.quantity||1}<br>${r.ticketId}</div>
+        <div style="margin-top:4px;font-size:12px;font-weight:600;color:${cidColor};font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;">${cidLabel}</div>
       </div>
       <div class="att-right">
         <span class="badge ${r.status}">${r.status.replace('_',' ')}</span>
         ${r.status==='ACTIVE'?`<button class="ci-btn" onclick="manualCI('${r.ticketId}',this)">Check In</button>`:''}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 async function manualCI(id,btn) {
