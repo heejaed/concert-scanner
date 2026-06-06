@@ -645,15 +645,31 @@ function showResult(r) {
     valEl.style.textDecoration = 'underline dotted';
     valEl.style.textUnderlineOffset = '4px';
     valEl.onclick = () => {
-      const input = prompt('Enter number of guests (1 – ' + stepperMax + '):', stepperCount);
-      if (input === null) return; // cancelled
-      const n = parseInt(input);
-      if (isNaN(n) || n < 1 || n > stepperMax) {
-        alert('Please enter a number between 1 and ' + stepperMax + '.');
-        return;
-      }
-      stepperCount = n;
-      updateStepper();
+      // 이미 input이 있으면 포커스만
+      let existing = centerEl.querySelector('input.stepper-input');
+      if (existing) { existing.focus(); return; }
+      valEl.style.display = 'none';
+      const inp = document.createElement('input');
+      inp.type = 'number';
+      inp.inputMode = 'numeric';
+      inp.pattern = '[0-9]*';
+      inp.className = 'stepper-input';
+      inp.min = 1; inp.max = stepperMax;
+      inp.value = stepperCount;
+      inp.style.cssText = 'width:80px;font-size:46px;font-weight:700;text-align:center;border:none;border-bottom:2px solid var(--red);background:transparent;color:var(--text);font-family:"Cormorant Garamond","Playfair Display",serif;outline:none;-webkit-appearance:none;margin:0 auto;display:block;';
+      inp.oninput = () => {
+        const n = parseInt(inp.value);
+        if (!isNaN(n) && n >= 1 && n <= stepperMax) { stepperCount = n; updateStepper(); }
+      };
+      inp.onblur = () => {
+        const n = parseInt(inp.value);
+        stepperCount = (!isNaN(n) && n >= 1 && n <= stepperMax) ? n : Math.min(Math.max(1, n||1), stepperMax);
+        inp.remove();
+        valEl.style.display = '';
+        updateStepper();
+      };
+      centerEl.insertBefore(inp, subEl);
+      inp.focus(); inp.select();
     };
 
     const subEl = document.createElement('div');
@@ -882,14 +898,38 @@ async function manualCI(id, btn) {
       valWrap.appendChild(valNum);
       valWrap.appendChild(valSub);
 
-      // 탭으로 숫자 직접 입력
+      // 탭으로 숫자 직접 입력 — inline number input (numeric keyboard)
       valWrap.onclick = () => {
-        const input = prompt('Enter number of guests (1 – ' + remain + '):', inlineCount);
-        if (input === null) return;
-        const n = parseInt(input);
-        if (isNaN(n) || n < 1 || n > remain) { alert('Please enter a number between 1 and ' + remain + '.'); return; }
-        inlineCount = n;
-        updateInline();
+        // 이미 input이 있으면 포커스만
+        let existing = valWrap.querySelector('input');
+        if (existing) { existing.focus(); return; }
+        valNum.style.display = 'none';
+        valSub.style.display = 'none';
+        const inp = document.createElement('input');
+        inp.type = 'number';
+        inp.inputMode = 'numeric';
+        inp.pattern = '[0-9]*';
+        inp.min = 1; inp.max = remain;
+        inp.value = inlineCount;
+        inp.style.cssText = 'width:70px;font-size:36px;font-weight:700;text-align:center;border:none;border-bottom:2px solid var(--red);background:transparent;color:var(--text);font-family:"Cormorant Garamond","Playfair Display",serif;outline:none;-webkit-appearance:none;';
+        inp.oninput = () => {
+          const n = parseInt(inp.value);
+          if (!isNaN(n) && n >= 1 && n <= remain) {
+            inlineCount = n;
+            updateInline();
+          }
+        };
+        inp.onblur = () => {
+          inp.remove();
+          valNum.style.display = '';
+          valSub.style.display = '';
+          const n = parseInt(inp.value);
+          if (!isNaN(n) && n >= 1 && n <= remain) { inlineCount = n; }
+          else { inlineCount = Math.min(Math.max(1, n||1), remain); }
+          updateInline();
+        };
+        valWrap.insertBefore(inp, valNum);
+        inp.focus(); inp.select();
       };
 
       const updateInline = () => {
