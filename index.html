@@ -640,6 +640,21 @@ function showResult(r) {
     const valEl = document.createElement('div');
     valEl.className = 'stepper-val';
     valEl.textContent = stepperCount;
+    valEl.title = 'Tap to enter a number';
+    valEl.style.cursor = 'pointer';
+    valEl.style.textDecoration = 'underline dotted';
+    valEl.style.textUnderlineOffset = '4px';
+    valEl.onclick = () => {
+      const input = prompt('Enter number of guests (1 – ' + stepperMax + '):', stepperCount);
+      if (input === null) return; // cancelled
+      const n = parseInt(input);
+      if (isNaN(n) || n < 1 || n > stepperMax) {
+        alert('Please enter a number between 1 and ' + stepperMax + '.');
+        return;
+      }
+      stepperCount = n;
+      updateStepper();
+    };
 
     const subEl = document.createElement('div');
     subEl.className = 'stepper-sub';
@@ -673,9 +688,7 @@ function showResult(r) {
     function updateStepper() {
       valEl.textContent = stepperCount;
       subEl.textContent = stepperCount === 1 ? 'guest' : 'guests';
-      // − 버튼 시각적 비활성화
       minusBtn.style.opacity = stepperCount <= 1 ? '0.3' : '1';
-      // + 버튼 시각적 비활성화
       plusBtn.style.opacity = stepperCount >= stepperMax ? '0.3' : '1';
     }
 
