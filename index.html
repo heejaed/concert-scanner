@@ -813,28 +813,146 @@ function renderSearch(data,list) {
   }).join('');
 }
 
-async function manualCI(id,btn) {
-  btn.disabled=true; btn.textContent='…';
+async function manualCI(id, btn) {
+  btn.disabled = true; btn.textContent = '…';
   try {
-    const res=await api('lookup',{ticketId:id});
+    const res = await api('lookup', { ticketId: id });
+    const card = document.getElementById('ac-' + id);
+
     if (res.success) {
       // qty=1 바로 체크인 성공
-      const card=document.getElementById('ac-'+id);
-      if(card){
-        card.style.borderColor='var(--green)'; btn.textContent='✓ Done';
-        btn.style.background='var(--green)'; btn.style.color='#fff';
-        const badge=card.querySelector('.badge');
-        if(badge){badge.className='badge CHECKED_IN';badge.textContent='CHECKED IN';}
+      if (card) {
+        card.style.borderColor = 'var(--green)';
+        btn.textContent = '✓ Done';
+        btn.style.background = 'var(--green)'; btn.style.color = '#fff';
+        const badge = card.querySelector('.badge');
+        if (badge) { badge.className = 'badge CHECKED_IN'; badge.textContent = 'CHECKED IN'; }
       }
-    } else if (res.status==='NEEDS_COUNT' || res.status==='PARTIAL') {
-      // qty>1 → 스테퍼 UI 표시
+    } else if (res.status === 'NEEDS_COUNT' || res.status === 'PARTIAL') {
+      // qty>1 → 카드 안에 인라인 스테퍼 UI 펼치기
       lastScannedId = id;
-      btn.textContent='Select'; btn.disabled=false;
-      showResult(Object.assign(res, {ticketId:id}));
+      btn.style.display = 'none'; // Check In 버튼 숨김
+
+      const already  = res.checkedCount || 0;
+      const total    = res.quantity || 1;
+      const remain   = total - already;
+      let inlineCount = remain;
+
+      // 기존 스테퍼가 있으면 제거
+      const existingStepper = card.querySelector('.inline-stepper');
+      if (existingStepper) existingStepper.remove();
+
+      // 인라인 스테퍼 컨테이너
+      const stepWrap = document.createElement('div');
+      stepWrap.className = 'inline-stepper';
+      stepWrap.style.cssText = 'margin-top:12px;display:flex;flex-direction:column;gap:10px;';
+
+      if (already > 0) {
+        const alreadyNote = document.createElement('div');
+        alreadyNote.style.cssText = 'font-size:12px;color:var(--text3);font-family:"JetBrains Mono",monospace;';
+        alreadyNote.textContent = already + ' of ' + total + ' already checked in';
+        stepWrap.appendChild(alreadyNote);
+      }
+
+      // 스테퍼 행
+      const stepRow = document.createElement('div');
+      stepRow.style.cssText = 'display:flex;align-items:center;gap:10px;';
+
+      const mkBtn = (label) => {
+        const b = document.createElement('button');
+        b.textContent = label;
+        b.style.cssText = 'width:48px;height:48px;border-radius:12px;border:1.5px solid var(--border2);background:var(--surface);font-size:22px;font-weight:300;color:var(--text2);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;';
+        return b;
+      };
+
+      const minusB = mkBtn('−');
+      const plusB  = mkBtn('+');
+
+      const valWrap = document.createElement('div');
+      valWrap.style.cssText = 'flex:1;text-align:center;cursor:pointer;';
+
+      const valNum = document.createElement('div');
+      valNum.style.cssText = 'font-size:36px;font-weight:700;color:var(--text);font-family:"Cormorant Garamond","Playfair Display",serif;line-height:1;text-decoration:underline dotted;text-underline-offset:3px;';
+      valNum.textContent = inlineCount;
+
+      const valSub = document.createElement('div');
+      valSub.style.cssText = 'font-size:11px;color:var(--text3);font-family:"JetBrains Mono",monospace;text-transform:uppercase;letter-spacing:.06em;margin-top:3px;';
+      valSub.textContent = inlineCount === 1 ? 'guest' : 'guests';
+
+      valWrap.appendChild(valNum);
+      valWrap.appendChild(valSub);
+
+      // 탭으로 숫자 직접 입력
+      valWrap.onclick = () => {
+        const input = prompt('Enter number of guests (1 – ' + remain + '):', inlineCount);
+        if (input === null) return;
+        const n = parseInt(input);
+        if (isNaN(n) || n < 1 || n > remain) { alert('Please enter a number between 1 and ' + remain + '.'); return; }
+        inlineCount = n;
+        updateInline();
+      };
+
+      const updateInline = () => {
+        valNum.textContent = inlineCount;
+        valSub.textContent = inlineCount === 1 ? 'guest' : 'guests';
+        minusB.style.opacity = inlineCount <= 1 ? '0.3' : '1';
+        plusB.style.opacity  = inlineCount >= remain ? '0.3' : '1';
+        ciBtn.textContent = 'Check In ' + inlineCount + (inlineCount === 1 ? ' Guest' : ' Guests');
+      };
+
+      minusB.onclick = () => { if (inlineCount > 1) { inlineCount--; updateInline(); } };
+      plusB.onclick  = () => { if (inlineCount < remain) { inlineCount++; updateInline(); } };
+
+      stepRow.appendChild(minusB);
+      stepRow.appendChild(valWrap);
+      stepRow.appendChild(plusB);
+      stepWrap.appendChild(stepRow);
+
+      // Check In 확인 버튼
+      const ciBtn = document.createElement('button');
+      ciBtn.style.cssText = 'width:100%;min-height:52px;border-radius:12px;border:none;background:#27ae60;color:#fff;font-size:16px;font-weight:700;font-family:"Inter",sans-serif;cursor:pointer;-webkit-tap-highlight-color:transparent;';
+      ciBtn.textContent = 'Check In ' + inlineCount + (inlineCount === 1 ? ' Guest' : ' Guests');
+      ciBtn.onclick = async () => {
+        ciBtn.disabled = true; ciBtn.textContent = 'Checking in…';
+        const r2 = await api('checkin', { ticketId: id, count: inlineCount });
+        if (r2.success) {
+          stepWrap.remove();
+          if (card) {
+            card.style.borderColor = 'var(--green)';
+            const badge = card.querySelector('.badge');
+            const meta  = card.querySelector('.att-meta');
+            if (badge) {
+              if (r2.remaining > 0) {
+                badge.className = 'badge ACTIVE';
+                badge.textContent = r2.checkedCount + '/' + r2.quantity + ' IN';
+                // Check In 버튼 복원 (남은 인원 위해)
+                btn.style.display = ''; btn.disabled = false; btn.textContent = 'Check In';
+              } else {
+                badge.className = 'badge CHECKED_IN'; badge.textContent = 'CHECKED IN';
+              }
+            }
+          }
+        } else {
+          ciBtn.disabled = false; ciBtn.textContent = 'Try Again';
+        }
+      };
+
+      stepWrap.appendChild(ciBtn);
+
+      // 취소 버튼
+      const cancelB = document.createElement('button');
+      cancelB.style.cssText = 'width:100%;min-height:40px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text3);font-size:13px;font-family:"Inter",sans-serif;cursor:pointer;';
+      cancelB.textContent = '↩ Cancel';
+      cancelB.onclick = () => { stepWrap.remove(); btn.style.display = ''; btn.disabled = false; btn.textContent = 'Check In'; };
+      stepWrap.appendChild(cancelB);
+
+      card.appendChild(stepWrap);
+      updateInline();
+
     } else {
-      btn.textContent='Fail'; btn.style.background='var(--err)'; btn.disabled=false;
+      btn.textContent = 'Fail'; btn.style.background = 'var(--err)'; btn.disabled = false;
     }
-  } catch(e){ btn.textContent='Error'; btn.disabled=false; }
+  } catch(e) { btn.textContent = 'Error'; btn.disabled = false; }
 }
 
 function openConfig() {
